@@ -30,7 +30,7 @@ ThreadPool::~ThreadPool()
  *  可重复调用
  *  只负责创建manage线程，不负责线程池
  */
-bool ThreadPool::startPool(void)
+bool ThreadPool::startPool()
 {
     // 已启动
     if(running_)
@@ -53,7 +53,7 @@ bool ThreadPool::startPool(void)
  *  可重复调用
  *  只是通知manage线程停止，会一直等待到停止再退出
  */
-bool ThreadPool::stopPool(void)
+bool ThreadPool::stopPool()
 {
     // 已停止
     if(!running_)
@@ -89,7 +89,7 @@ bool ThreadPool::addTask(Task oneTask)
 /*
  *  唤醒所有阻塞的线程
  */
-void ThreadPool::wakeupAllThread(void)
+void ThreadPool::wakeupAllThread()
 {
     pthread_cond_broadcast(&taskCond_);
 }
@@ -100,7 +100,7 @@ void ThreadPool::wakeupAllThread(void)
  *  创建并启动新的子线程
  *  不能跨线程调用
  */
-bool ThreadPool::createAndStartNewThread(void)
+bool ThreadPool::createAndStartNewThread()
 {
     if(pool_.size() >= kmaxTHREAD_)
         return false;
@@ -130,35 +130,28 @@ void *ThreadPool::managePool(void *threadPoolData)
         idleNum  = 0;
 
         // 销毁STOP线程对象
-//        std::string buf;
         for(int i=0;i < pool_.size();++i)
         {
             switch (pool_[i]->getStatus())
             {
                 case Thread::BUSSY:
-//                    buf += "* ";
                     ++bussyNum;
                     break;
                 case Thread::IDEL:
-//                    buf += ". ";
                     ++idleNum;
                     break;
                 case Thread::STOP:
-//                    buf += "s ";
-                    std::swap(pool_[i],pool_.back());
+                    std::iter_swap(pool_.begin()+i,pool_.end()-1);
                     pool_.pop_back(); // unique_ptr弹出后对象销毁
                     --i;
                     break;
                 case Thread::STOPPING:
-//                    buf += "p ";
                     break;
                 default:
                     /// FIXME:缺少错误处理
                     break;
             }
         }
-//        std::cout << '[' << pool_.size() << ']';
-//        std::cout << buf << std::endl;
 
         // 全都在忙，且有多余任务，补充线程
         if(idleNum == 0)
@@ -186,7 +179,6 @@ void *ThreadPool::managePool(void *threadPoolData)
     }
 
     // 等待所有子线程停止，销毁线程对象
-//    std::cout << "等待所有子线程停止..." << std::endl;
     while(!pool_.empty())
     {
         for(int i=0;i < pool_.size();++i)
@@ -198,7 +190,7 @@ void *ThreadPool::managePool(void *threadPoolData)
                     pool_[i]->stopThread(); // 通知子线程结束
                     break;
                 case Thread::STOP:
-                    std::swap(pool_[i],pool_.back());
+                    std::iter_swap(pool_.begin()+i,pool_.end()-1);
                     pool_.pop_back(); // unique_ptr弹出后对象销毁
                     --i;
                     break;
@@ -210,10 +202,8 @@ void *ThreadPool::managePool(void *threadPoolData)
             }
         }
         wakeupAllThread(); // 唤醒所有子线程，防止其阻塞在wait处。STOPPING状态的子线程会链式相互唤醒
-//        std::cout << "剩余子线程数量：" << pool_.size() << std::endl;
     }
 
-//    std::cout << "所有子线程已停止！！！" << std::endl;
     running_ = false;
     pthread_exit(nullptr);
 
@@ -230,6 +220,7 @@ void* ThreadPool::threadFunc(void *threadData)
 
     while(thisThread->isRunning())
     {
+        thisThread->setIdle();
         // 取任务
         pthread_mutex_lock(&taskMutex_);
         while(taskList_.empty())
@@ -240,7 +231,7 @@ void* ThreadPool::threadFunc(void *threadData)
             {
                 thisThread->setStop();
                 pthread_mutex_unlock(&taskMutex_); // 结束线程之前先解锁
-                wakeupAllThread(); // 防止抢了其他线程的任务唤醒，所以补一次wakeup
+                wakeupAllThread(); // 防止抢了其他线程的任务唤醒，所以补一次wakeup；或唤醒其他STOPPING线程
                 pthread_exit(nullptr);
             }
             /// FIXME: stop线程后的wakeup信号如果被非STOPPING线程抢到怎么办？
@@ -250,12 +241,13 @@ void* ThreadPool::threadFunc(void *threadData)
         pthread_mutex_unlock(&taskMutex_);
 
         // 执行任务
-        thisThread->setBussy();
+        if(!thisThread->isStopping()) // 防止STOPPING状态被刷掉
+            thisThread->setBussy();
         if(curTask != nullptr)
             curTask();
-        thisThread->setIdle();
     }
 
+    thisThread->setStop();
     pthread_exit(nullptr);
 }
 

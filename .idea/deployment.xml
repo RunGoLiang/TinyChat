@@ -14,6 +14,11 @@
           <mappings>
             <mapping deploy="/home/dal/TinyChat" local="$PROJECT_DIR$" web="/" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/test/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/base/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
         </serverdata>
       </paths>
       <paths name="muduo">

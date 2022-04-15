@@ -10,8 +10,8 @@
 
 ////////////////////
 /// 测试用头文件//////
-//#include <iostream>
-//#include <string>
+#include <iostream>
+#include <string>
 ////////////////////
 ////////////////////
 

@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++0x -g -rdynamic CMakeFiles/testThreadPool.dir/testThreadPool.cpp.o -o testThreadPool  ../base/libbase.a -lpthread -lrt 

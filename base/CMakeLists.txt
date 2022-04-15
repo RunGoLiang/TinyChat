@@ -1,8 +1,5 @@
 project(base)
 
-# 规定.h头文件路径
-include_directories(${PROJECT_SOURCE_DIR})
-
 # 获取路径下所有的.cpp/.c/.cc文件，并赋值给变量中
 aux_source_directory(${PROJECT_SOURCE_DIR} SRC_FILES)
 # 将.cpp/.c/.cc文件生成.a静态库

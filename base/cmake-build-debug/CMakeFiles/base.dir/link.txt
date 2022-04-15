@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbase.a CMakeFiles/base.dir/Thread.o CMakeFiles/base.dir/ThreadPool.o
+/usr/bin/ranlib libbase.a

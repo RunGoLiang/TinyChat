@@ -27,7 +27,7 @@ Thread::~Thread()
  *  创建子线程
  *  可重复调用
  */
-bool Thread::startThread(void)
+bool Thread::startThread()
 {
     // 子线程已启动
     if(isRunning())
@@ -50,7 +50,7 @@ bool Thread::startThread(void)
  *  并不会马上结束，而是设置标志位running_为false
  *  由于子线程会阻塞于wait的子线程，需要在调用stopThread()后，再唤醒所有阻塞线程
  */
-bool Thread::stopThread(void)
+bool Thread::stopThread()
 {
     if(!isRunning())
         return false;
