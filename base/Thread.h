@@ -1,5 +1,5 @@
-#ifndef _THREAD_H
-#define _THREAD_H
+#ifndef THREAD_H
+#define THREAD_H
 
 #include <functional>
 #include <pthread.h>
@@ -33,24 +33,24 @@ namespace base
     public:
         /// 可跨线程调用
         explicit Thread(ThreadFunc func);
-        ~Thread(void);
+        ~Thread();
 
-        bool startThread(void);
-        bool stopThread(void);
+        bool startThread();
+        bool stopThread();
 
         /// FIXME: 都是系统调用，很耗费资源
-        int32_t getStatus(void){ return threadStatus_.get(); }
+        int32_t getStatus(){ return threadStatus_.get(); }
 
-        bool isRunning(void)   { return threadStatus_.get() == IDEL || threadStatus_.get() == BUSSY; }
-        bool isIdle(void)      { return threadStatus_.get() == IDEL; }
-        bool isBussy(void)     { return threadStatus_.get() == BUSSY; }
-        bool isStopping(void)  { return threadStatus_.get() == STOPPING; }
-        bool isStop(void)      { return threadStatus_.get() == STOP; }
+        bool isRunning()   { return threadStatus_.get() == IDEL || threadStatus_.get() == BUSSY; }
+        bool isIdle()      { return threadStatus_.get() == IDEL; }
+        bool isBussy()     { return threadStatus_.get() == BUSSY; }
+        bool isStopping()  { return threadStatus_.get() == STOPPING; }
+        bool isStop()      { return threadStatus_.get() == STOP; }
 
-        void setIdle(void)     { threadStatus_.getAndSet(IDEL); }
-        void setBussy(void)    { threadStatus_.getAndSet(BUSSY); }
-        void setStopping(void) { threadStatus_.getAndSet(STOPPING); }
-        void setStop(void)     { threadStatus_.getAndSet(STOP); }
+        void setIdle()     { threadStatus_.getAndSet(IDEL); }
+        void setBussy()    { threadStatus_.getAndSet(BUSSY); }
+        void setStopping() { threadStatus_.getAndSet(STOPPING); }
+        void setStop()     { threadStatus_.getAndSet(STOP); }
 
     private:
         /// 不可跨线程调用

@@ -1,5 +1,5 @@
-#ifndef _THREADPOOL_H
-#define _THREADPOOL_H
+#ifndef THREADPOOL_H
+#define THREADPOOL_H
 
 #include <vector>
 #include <queue>
@@ -10,8 +10,8 @@
 
 ////////////////////
 /// 测试用头文件//////
-#include <iostream>
-#include <string>
+//#include <iostream>
+//#include <string>
 ////////////////////
 ////////////////////
 
@@ -33,16 +33,16 @@ namespace base
         };
 
         /// 可跨线程调用
-        ThreadPool(int minThread);
+        explicit ThreadPool(int minThread);
         ~ThreadPool();
 
-        bool startPool(void);
-        bool stopPool(void);
+        bool startPool();
+        bool stopPool();
         bool addTask(Task oneTask);
-        void wakeupAllThread(void);
+        void wakeupAllThread();
 
         /// 不可跨线程调用
-        bool createAndStartNewThread(void);
+        bool createAndStartNewThread();
         void* managePool(void *threadPoolData);
         void* threadFunc(void *threadData);
 
