@@ -7,8 +7,6 @@ using namespace base;
  */
 EventLoop::EventLoop():
         epollfd_(epoll_create1(EPOLL_CLOEXEC)), /*epoll实例*/
-        eventsListInitSize_(16),
-        events_(eventsListInitSize_),
         curConnection_(nullptr),
         threadId_(static_cast<pid_t>(::syscall(SYS_gettid))) /*EventLoop对象是在所属的线程被创建的，因此构造时就读取即可*/
 {
@@ -23,6 +21,7 @@ EventLoop::EventLoop():
     pthread_mutex_init(&pendingsMutex_, nullptr);
 }
 
+/// FIXME:和TcpServer谁负责关闭所有Tcp连接？关闭epoll。
 /*
  *  析构函数
  */
@@ -30,6 +29,13 @@ EventLoop::~EventLoop()
 {
     // 销毁互斥锁
     pthread_mutex_destroy(&pendingsMutex_);
+
+    // 注销监听，关闭wakeup
+    struct epoll_event event;
+    event.events  = EPOLLIN;
+    event.data.fd = wakeupfd_;
+    epoll_ctl(epollfd_,EPOLL_CTL_DEL, wakeupfd_, &event);
+    close(wakeupfd_);
 }
 
 /*
@@ -41,6 +47,9 @@ void EventLoop::loop()
         return;
 
     running_ = true;
+
+    const int eventsListInitSize_ = 16; // 初始化events_的大小，如果不够会成倍扩展
+    std::vector<struct epoll_event> events_(eventsListInitSize_); // epoll返回发生的事件结构体
 
     while(running_)
     {
@@ -84,11 +93,14 @@ void EventLoop::loop()
                 curConnection_->handleError();
             }
 
+            // 可读事件
             // POLLRDHUP：对等方关闭连接、半连接，也认为是一件可读事件
             if (revents & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
             {
                 curConnection_->handleRead();
             }
+
+            // 可写事件
             if (revents & EPOLLOUT)
             {
                 curConnection_->handleWrite();

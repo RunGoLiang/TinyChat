@@ -13,8 +13,8 @@ TcpServer::TcpServer(
         onMessage       onMessageFunc,
         onWriteComplete onWriteCompleteFunc)
         :
-        taskPool_(taskPoolSize), /*任务处理线程池*/
-        ioThreadsNum_(ioPoolSize),           /*IO线程数量*/
+        taskPool_(taskPoolSize),    /*任务处理线程池*/
+        ioThreadsNum_(ioPoolSize),            /*IO线程数量*/
         ip_(INADDR_ANY),                      /*监听地址*/
         port_(port),                          /*监听端口*/
         onConnection_(onConnectionFunc),      /*回调*/
@@ -23,8 +23,6 @@ TcpServer::TcpServer(
         running_(false),
         idlefd_(::open("/dev/null", O_RDONLY | O_CLOEXEC)), /*空闲fd*/
         epollfd_(epoll_create1(EPOLL_CLOEXEC)), /*epoll实例*/
-        eventsListInitSize_(16),                     /*事件保存列表初始化大小*/
-        events_(eventsListInitSize_),             /*epoll事件列表*/
         nextEventLoop_(0)  /*IO线程轮叫的下一个*/
 {
     signal(SIGPIPE, SIG_IGN); // 忽略信号SIGPIPE。当客户端断开tcp连接后，服务器再向其发送两次信息则服务器进程会收到SIGPIPE信号。这个信号的默认处理是结束进程。
@@ -94,6 +92,7 @@ void TcpServer::start()
     acceptNewConnection();
 }
 
+/// FIXME:关闭所有TcpConnection，缺少主动断开连接的操作
 /*
  *  停止TcpServer
  *  可重复调用
@@ -115,8 +114,7 @@ void TcpServer::stop()
     // 关闭IO线程池
     stopEventLoopThreadPool();
 
-    /// FIXME:关闭所有TcpConnection
-
+    // 关闭所有TcpConnection
 
     running_ = false;
 }
@@ -217,6 +215,10 @@ void TcpServer::stopEventLoopThreadPool()
         eventLoops_[i]->wakeup();    // 唤醒IO线程
         ioThreads_[i]->stopThread(); // detach IO线程，不等待回收资源
     }
+
+    // 删除eventLoops_中保存的引用，临一份引用在IO线程函数entryIOThread()中，退出线程函数后自动析构EventLoop对象
+    for(int i=0;i < ioThreadsNum_;++i)
+        eventLoops_.pop_back();
 }
 
 /*
@@ -226,6 +228,9 @@ void TcpServer::acceptNewConnection()
 {
     if(!running_)
         running_ = true;
+
+    const int eventsListInitSize_ = 16; // 初始化events_的大小，如果不够会成倍扩展
+    std::vector<struct epoll_event> events_(eventsListInitSize_); // epoll返回发生的事件结构体
 
     while(running_)
     {

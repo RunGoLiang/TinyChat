@@ -3,20 +3,11 @@
 
 #include "Thread.h"
 
-////////////////////
-/// 测试用头文件//////
-//#include <iostream>
-//#include <string>
-////////////////////
-////////////////////
-
 namespace base
 {
-
-    // 前置声明
-    class Thread;
-
-    // 动态线程池，作为任务线程池使用
+    /*
+     *  动态线程池，作为任务线程池使用
+     * */
     class ThreadPool:noncopyable
     {
     public:

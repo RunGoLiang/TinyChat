@@ -6,6 +6,17 @@
 
 namespace base
 {
+    /*
+     *  保存一个Tcp连接
+     *  生命周期由shared_ptr控制，正常运作时保留2份指向其对象的引用计数：TcpServer和EventLoop的connections_各有一份。
+     *
+     *  断开连接时，首先在loop()中curConnection_临时保存一份引用（引用剩余3），
+     *  然后调用TcpConnection::handleRead()，再跳到TcpConnection::handleClose()；
+     *  在handleClose()中，先调用TcpServer::addClean()告知server从其connections_中清理掉一份引用（引用剩余2）；
+     *  然后调用EventLoop::addClean()，告知eventloop从其connections_中清理掉一份引用，并取消监听（引用剩余1）；
+     *  最后回到loop()中，curConnection_改变指向，保存的引用消失（引用剩余0）。
+     *  由于“server清理”和“curConnection_改变指向”位于不同线程，因此是两者中后发生者析构了TcpConnection对象。
+     * */
     class TcpConnection:noncopyable
     {
     public:

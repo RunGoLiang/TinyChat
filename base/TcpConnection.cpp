@@ -22,7 +22,6 @@ TcpConnection::TcpConnection(
         onWriteComplete_(onWriteCompleteFunc),
         onCleanTcpServer_(onCleanTcpSeverFunc)
 {
-
 }
 
 /*
@@ -30,7 +29,7 @@ TcpConnection::TcpConnection(
  */
 TcpConnection::~TcpConnection()
 {
-
+    close(socketfd_);
 }
 
 /*
@@ -38,8 +37,6 @@ TcpConnection::~TcpConnection()
  */
 void TcpConnection::handleRead()
 {
-
-
     char buf[1024] = {0};
     int recvBytes = read(socketfd_, buf, sizeof(buf));
 
@@ -60,6 +57,7 @@ void TcpConnection::handleRead()
 
 /*
  *  可写事件回调
+ *  主要用于一次发送不完时，需要监听可写事件，然后回调handleWrite()把暂存在output buffer中的数据发出去
  */
 void TcpConnection::handleWrite()
 {
@@ -68,6 +66,10 @@ void TcpConnection::handleWrite()
 
 /*
  *  关闭当前连接
+ *  干3件事：
+ *  1.调用用户设定的onConnection()
+ *  2.清理TcpServer
+ *  3.清理EventLoop，取消监听
  */
 void TcpConnection::handleClose()
 {
@@ -78,7 +80,6 @@ void TcpConnection::handleClose()
 
     // 清理EventLoop，取消监听，调用EventLoop::addClean()
     onCleanEventLoop_(socketfd_);
-
 }
 
 /*

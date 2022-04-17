@@ -8,8 +8,12 @@ namespace base
 {
     /*
      * Tcp服务器类
-     * 利用epoll监听listenfd的连接请求，建立新的连接
-     * 利用name-pointer的K-V对保存TcpConnection列表
+     * 利用epoll监听listenfd的连接请求，建立新的连接；
+     * 利用name-pointer的K-V对保存TcpConnection列表；
+     * 利用unique_ptr保存IO线程对象，shared_ptr保存EventLoop对象；
+     * 在创建的IO子线程内部创建EventLoop对象，因此向eventLoops_中存放时是跨线程操作，需要加锁；
+     * 清理TcpConnection对象是在IO线程中，跨线程调用TcpServer::addClean()，向cleans_添加要清除的连接name，
+     * 等下次处理完连接请求后会执行TcpServer::cleanTcpConnection()来清除对象。但并不一定马上析构对象；
      * */
     class TcpServer:noncopyable
     {
@@ -49,11 +53,8 @@ namespace base
         bool running_;
 
         int  listenfd_; // 监听socket
-        int  epollfd_;   // 监听用的epoll实例
+        int  epollfd_;  // 监听用的epoll实例
         int  idlefd_;   // 占一个位置，以防fd耗尽
-
-        int eventsListInitSize_; // 初始化events_的大小，如果不够会成倍扩展
-        std::vector<struct epoll_event> events_; // epoll返回发生的事件结构体
 
         ThreadPool taskPool_; // 任务处理线程池
 

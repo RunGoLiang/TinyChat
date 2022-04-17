@@ -26,6 +26,6 @@ int main()
 
     std::cout << "server创建完毕" <<std::endl;
     server.start();
-    std::cout << "server启动完成" <<std::endl;
+
     exit(0);
 }
