@@ -82,6 +82,24 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/dal/TinyChat/base/EventLoop.cpp">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/EventLoop.h">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/TcpConnection.cpp">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/TcpConnection.h">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/TcpServer.cpp">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/TcpServer.h">
+			<Option target="base"/>
+		</Unit>
 		<Unit filename="/home/dal/TinyChat/base/Thread.cpp">
 			<Option target="base"/>
 		</Unit>

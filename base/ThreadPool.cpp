@@ -23,6 +23,9 @@ ThreadPool::ThreadPool(int minThread)
 ThreadPool::~ThreadPool()
 {
     stopPool();
+
+    pthread_mutex_destroy(&taskMutex_);
+    pthread_cond_destroy(&taskCond_);
 }
 
 /*

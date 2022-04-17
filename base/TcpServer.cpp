@@ -6,11 +6,15 @@ using namespace base;
  *  构造函数
  */
 TcpServer::TcpServer(
+        int taskPoolSize,
+        int ioPoolSize,
         std::string port,
         onConnection    onConnectionFunc,
         onMessage       onMessageFunc,
         onWriteComplete onWriteCompleteFunc)
         :
+        taskPool_(taskPoolSize), /*任务处理线程池*/
+        ioThreadsNum_(ioPoolSize),           /*IO线程数量*/
         ip_(INADDR_ANY),                      /*监听地址*/
         port_(port),                          /*监听端口*/
         onConnection_(onConnectionFunc),      /*回调*/
@@ -20,7 +24,8 @@ TcpServer::TcpServer(
         idlefd_(::open("/dev/null", O_RDONLY | O_CLOEXEC)), /*空闲fd*/
         epollfd_(epoll_create1(EPOLL_CLOEXEC)), /*epoll实例*/
         eventsListInitSize_(16),                     /*事件保存列表初始化大小*/
-        events_(eventsListInitSize_)              /*epoll事件列表*/
+        events_(eventsListInitSize_),             /*epoll事件列表*/
+        nextEventLoop_(0)  /*IO线程轮叫的下一个*/
 {
     signal(SIGPIPE, SIG_IGN); // 忽略信号SIGPIPE。当客户端断开tcp连接后，服务器再向其发送两次信息则服务器进程会收到SIGPIPE信号。这个信号的默认处理是结束进程。
     signal(SIGCHLD, SIG_IGN); // 避免僵尸进程
@@ -39,6 +44,10 @@ TcpServer::TcpServer(
     tmpData.sin_port        = htons(atoi(port.c_str()));
     tmpData.sin_addr.s_addr = ip_;
     bind(listenfd_,(struct sockaddr *)&tmpData,sizeof(tmpData));
+
+    // 初始化互斥锁
+    pthread_mutex_init(&eventLoopsMutex_, nullptr);
+    pthread_mutex_init(&cleanMutex_, nullptr);
 }
 
 /*
@@ -48,9 +57,14 @@ TcpServer::~TcpServer()
 {
     stop();
 
+    // 关闭文件描述符
     close(listenfd_);
     close(epollfd_);
     close(idlefd_);
+
+    // 销毁互斥锁
+    pthread_mutex_destroy(&eventLoopsMutex_);
+    pthread_mutex_destroy(&cleanMutex_);
 }
 
 /*
@@ -62,8 +76,11 @@ void TcpServer::start()
     if(running_)
         return;
 
-    /// FIXME:创建IO线程池
-//    createEventLoopThreadPool();
+    // 启动任务处理线程池
+    taskPool_.startPool();
+
+    // 创建IO线程池
+    createEventLoopThreadPool();
 
     // 【4】设置监听
     listen(listenfd_,SOMAXCONN);
@@ -86,20 +103,54 @@ void TcpServer::stop()
     if(!running_)
         return;
 
-    /// FIXME:清除epoll对listenfd_的监听
-    /// FIXME:关闭IO线程池
+    // 停止任务处理线程池
+    taskPool_.stopPool();
+
+    // 清除epoll对listenfd_的监听
+    struct epoll_event event;
+    event.events  = EPOLLIN;
+    event.data.fd = listenfd_;
+    epoll_ctl(epollfd_, EPOLL_CTL_DEL, listenfd_, &event);
+
+    // 关闭IO线程池
+    stopEventLoopThreadPool();
+
     /// FIXME:关闭所有TcpConnection
-//    stopEventLoopThreadPool();
+
 
     running_ = false;
 }
 
 /*
- *  创建一个新的TcpConnection对象
+ *  创建一个新的TcpConnection对象，保存至connections_
+ *  将新的TcpConnection对象用round Robin方式分配给各个IO EventLoop
  */
-void TcpServer::createNewTcpConnection()
+void TcpServer::createNewTcpConnection(int connfd,struct sockaddr_in peeraddr)
 {
+    // 每个TcpConnection的name字符串为：Tcp[xxxxxx……]（64位的时间字符串）
+    std::string connectionName;
 
+    // 获取当前时间，从1970年至今的us数
+    struct timeval time;
+    gettimeofday(&time, NULL);
+    int64_t seconds = time.tv_sec;
+    int64_t microSeconds = seconds * kMicroSecondsPerSecond + time.tv_usec;
+    connectionName = "Tcp[" + std::to_string(microSeconds) + "]";
+
+    // 用shared_ptr保存新建的TcpConnection对象，并将之存入connections_
+    std::shared_ptr<TcpConnection> newConnection(new TcpConnection(connectionName,
+                                                                   connfd,
+                                                                   peeraddr,
+                                                                   onConnection_,
+                                                                   onMessage_,
+                                                                   onWriteComplete_,
+                                                                   std::bind(&TcpServer::addClean,this,std::placeholders::_1)));
+    connections_[connectionName] = newConnection; // TcpConnection的shared_ptr保存两份：TcpServer、EventLoop各一份
+
+    // 将新的TcpConnection对象用round Robin方式分配给各个IO EventLoop
+    assert(nextEventLoop_<ioThreadsNum_);
+    eventLoops_[nextEventLoop_]->addConnection(std::move(newConnection));
+    nextEventLoop_ = (++nextEventLoop_) >= ioThreadsNum_ ? 0 : nextEventLoop_;
 }
 
 /*
@@ -107,7 +158,39 @@ void TcpServer::createNewTcpConnection()
  */
 void TcpServer::cleanTcpConnection()
 {
+    std::vector<std::string> cleans;
+    pthread_mutex_lock(&cleanMutex_);
+    cleans.swap(cleans_);
+    pthread_mutex_unlock(&cleanMutex_);
 
+    for(const std::string& curClean : cleans)
+    {
+        connections_.erase(curClean);
+    }
+}
+
+/*
+ *  向cleans_[]新增一项内容
+ *  供TcpConnection的handleClose()中跨线程调用
+ */
+void TcpServer::addClean(std::string name)
+{
+    pthread_mutex_lock(&cleanMutex_);
+    cleans_.push_back(name);
+    pthread_mutex_unlock(&cleanMutex_);
+}
+
+/*
+ *  IO线程入口函数
+ */
+void* TcpServer::entryIOThread(void *Data)
+{
+    std::shared_ptr<EventLoop> eventLoop(new EventLoop());
+    eventLoops_.push_back(eventLoop);
+
+    eventLoop->loop();
+
+    return nullptr;
 }
 
 /*
@@ -115,15 +198,25 @@ void TcpServer::cleanTcpConnection()
  */
 void TcpServer::createEventLoopThreadPool()
 {
-
+    for(int i=0;i < ioThreadsNum_;++i)
+    {
+        std::unique_ptr<Thread> newIOThread(new Thread(std::bind(&TcpServer::entryIOThread,this,std::placeholders::_1)));
+        newIOThread->startThread();
+        ioThreads_.emplace_back(std::move(newIOThread));
+    }
 }
 
 /*
- *  停止EventLoop固定线程池
+ *  通知IO线程停止
  */
 void TcpServer::stopEventLoopThreadPool()
 {
-
+    for(int i=0;i < ioThreadsNum_;++i)
+    {
+        eventLoops_[i]->stopLoop();  // 只要退出loop()就能结束IO线程
+        eventLoops_[i]->wakeup();    // 唤醒IO线程
+        ioThreads_[i]->stopThread(); // detach IO线程，不等待回收资源
+    }
 }
 
 /*
@@ -138,6 +231,7 @@ void TcpServer::acceptNewConnection()
     {
         int numEvent = epoll_wait(epollfd_,&(*events_.begin()), events_.size(),-1);
 
+        // 异常情况处理
         if(numEvent == -1 && errno == EINTR)
             continue;
         if(numEvent == 0)
@@ -145,11 +239,12 @@ void TcpServer::acceptNewConnection()
         if(numEvent == events_.size())
             events_.resize(events_.size() * 2); // 成倍地扩展大小
 
-        // 接受连接，创建新的TcpConnection对象，保存至connections_
+        // 连接请求处理
         for(int i=0;i < numEvent;++i)
         {
             if(events_[i].data.fd == listenfd_)
             {
+                // 接受连接请求
                 struct sockaddr_in peeraddr; // 对等方ip port，网络字节序
                 socklen_t peerlen = sizeof(peeraddr);
                 int connfd = accept4(listenfd_,
@@ -157,18 +252,28 @@ void TcpServer::acceptNewConnection()
                                               &peerlen,
                                               SOCK_NONBLOCK | SOCK_CLOEXEC);
 
-                onConnection_((void *)&peeraddr); // 连接建立时调用回调函数
+                // fd耗尽处理
+                if (connfd == -1)
+                {
+                    if (errno == EMFILE)
+                    {
+                        close(idlefd_);
+                        idlefd_ = accept(listenfd_, NULL, NULL);
+                        close(idlefd_);
+                        idlefd_ = open("/dev/null", O_RDONLY | O_CLOEXEC);
+                        continue;
+                    }
+                }
 
-                close(connfd);
-//                createNewTcpConnection();
+                // 连接建立时调用回调函数
+                onConnection_((void *)&peeraddr);
+
+                // 创建新的TcpConnection对象，保存至connections_，并分配给IO线程
+                createNewTcpConnection(connfd,peeraddr);
             }
         }
-
-        // 将新的TcpConnection对象用round Robin方式分配给各个IO EventLoop
-
-
         // 根据cleanQueue_来清理connections_中的TcpConnection对象
-//        cleanTcpConnection();
+        cleanTcpConnection();
     }
 
 }

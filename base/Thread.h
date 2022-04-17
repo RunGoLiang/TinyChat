@@ -1,17 +1,12 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include <functional>
-#include <pthread.h>
-
 #include "noncopyable.h"
 #include "Atomic.h"
+#include "Types.h"
 
 namespace base
 {
-    using ThreadFunc = std::function<void*(void*)>; // 工作线程主函数
-    using Task       = std::function<void(void)>;   // 任务函数
-
     class Thread:noncopyable
     {
     public:

@@ -1,37 +1,11 @@
-#ifndef _TCPSERVER_H
-#define _TCPSERVER_H
+#ifndef TCPSERVER_H
+#define TCPSERVER_H
 
-#include <string>
-#include <string.h>
-#include <vector>
-#include <queue>
-#include <unordered_map>
-#include <memory>
-
-#include <functional>
-#include <fcntl.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-
-#include <signal.h>
-#include <unistd.h>
-
-#include <netinet/in.h>
-#include <netinet/ip.h> /* superset of previous */
-#include <arpa/inet.h>
-
-#include "Thread.h"
-#include "noncopyable.h"
+#include "ThreadPool.h"
+#include "EventLoop.h"
 
 namespace base
 {
-    using onConnection    = std::function<void*(void*)>; // 连接建立、断开回调函数
-    using onMessage       = std::function<void*(void*)>; // 消息到来回调函数
-    using onWriteComplete = std::function<void*(void*)>; // 消息发送完毕回调函数
-
     /*
      * Tcp服务器类
      * 利用epoll监听listenfd的连接请求，建立新的连接
@@ -42,6 +16,8 @@ namespace base
     public:
         /// 不可跨线程调用
         explicit TcpServer(
+                int taskPoolSize,
+                int ioPoolSize,
                 std::string port,
                 onConnection    onConnectionFunc,
                 onMessage       onMessageFunc,
@@ -51,38 +27,49 @@ namespace base
         void start();
         void stop();
 
-        void createNewTcpConnection();
+        void createNewTcpConnection(int connfd,struct sockaddr_in peeraddr);
         void cleanTcpConnection();
+
+        void* entryIOThread(void *Data);
 
         void createEventLoopThreadPool();
         void stopEventLoopThreadPool();
 
+        /// 可跨线程调用
+        void addClean(std::string name);
+
     private:
+        /// 不可跨线程调用
         void acceptNewConnection();
 
     private:
-        in_addr_t ip_;
-        std::string port_;
+        in_addr_t       ip_;       // 监听的ip，默认为 0.0.0.0，即监听所有源ip
+        std::string     port_;     // 监听port
 
         bool running_;
-        int  listenfd_; // 监听socket
-        int  epollfd_;  // 监听用的epoll实例
-        int  idlefd_;   // 占一个位置，以防fd耗尽
 
-        onConnection    onConnection_;
-        onMessage       onMessage_;
-        onWriteComplete onWriteComplete_;
+        int  listenfd_; // 监听socket
+        int  epollfd_;   // 监听用的epoll实例
+        int  idlefd_;   // 占一个位置，以防fd耗尽
 
         int eventsListInitSize_; // 初始化events_的大小，如果不够会成倍扩展
         std::vector<struct epoll_event> events_; // epoll返回发生的事件结构体
 
-//        std::vector<std::unique_ptr<EventLoop>> loops_; // EventLoop列表
+        ThreadPool taskPool_; // 任务处理线程池
 
-//        std::unordered_map<std::string,std::shared_ptr<TcpConnection>> connections_; // TcpConnection列表，name-pointer的K-V对
-//        std::queue<std::string> cleanQueue_; // 需要clean的TcpConnection的name
-//        pthread_cond_t  cleanCond_;    // clean队列的条件变量
-//        pthread_mutex_t cleanMutex_;   // clean队列的互斥锁
+        int nextEventLoop_;
+        int ioThreadsNum_; // IO线程数量
+        std::vector<std::unique_ptr<Thread>>    ioThreads_;  // IO线程对象列表
+        std::vector<std::shared_ptr<EventLoop>> eventLoops_; // EventLoop对象列表
+        pthread_mutex_t eventLoopsMutex_;   // EventLoop对象列表的互斥锁
 
+        std::unordered_map<std::string,std::shared_ptr<TcpConnection>> connections_; // TcpConnection列表，name-pointer的K-V对
+        std::vector<std::string> cleans_; // 需要clean的TcpConnection的name
+        pthread_mutex_t cleanMutex_;   // clean队列的互斥锁
+
+        onConnection    onConnection_;
+        onMessage       onMessage_;
+        onWriteComplete onWriteComplete_;
     };
 }
 

@@ -1,10 +1,9 @@
-#include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <iostream>
 
 int main()
 {
@@ -18,9 +17,18 @@ int main()
     inet_pton(AF_INET,"127.0.0.1",&peerAddr.sin_addr.s_addr);
     connect(coonnfd,(struct sockaddr *)&peerAddr,sizeof(peerAddr));
 
-    sleep(3);
+    std::cout << "连接请求已发送" <<std::endl;
+
+    sleep(5);
+
+    char buf[] = "hello!";
+    write(coonnfd,buf,sizeof(buf));
+    std::cout << "消息已发送" <<std::endl;
+
+    sleep(5);
 
     close(coonnfd);
+    std::cout << "连接已关闭" <<std::endl;
 
     exit(0);
 }

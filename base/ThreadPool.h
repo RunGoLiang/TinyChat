@@ -1,12 +1,7 @@
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
-#include <vector>
-#include <queue>
-#include <memory>
-
 #include "Thread.h"
-#include "noncopyable.h"
 
 ////////////////////
 /// 测试用头文件//////

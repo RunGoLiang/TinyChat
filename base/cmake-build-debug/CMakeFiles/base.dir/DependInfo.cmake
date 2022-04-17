@@ -4,6 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/dal/TinyChat/base/EventLoop.cpp" "/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles/base.dir/EventLoop.o"
+  "/home/dal/TinyChat/base/TcpConnection.cpp" "/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles/base.dir/TcpConnection.o"
+  "/home/dal/TinyChat/base/TcpServer.cpp" "/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles/base.dir/TcpServer.o"
   "/home/dal/TinyChat/base/Thread.cpp" "/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles/base.dir/Thread.o"
   "/home/dal/TinyChat/base/ThreadPool.cpp" "/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles/base.dir/ThreadPool.o"
   )
