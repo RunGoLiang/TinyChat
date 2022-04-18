@@ -76,9 +76,22 @@ include CMakeFiles/base.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/base.dir/flags.make
 
+CMakeFiles/base.dir/Buffer.o: CMakeFiles/base.dir/flags.make
+CMakeFiles/base.dir/Buffer.o: ../Buffer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/base.dir/Buffer.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/Buffer.o -c /home/dal/TinyChat/base/Buffer.cpp
+
+CMakeFiles/base.dir/Buffer.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/base.dir/Buffer.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dal/TinyChat/base/Buffer.cpp > CMakeFiles/base.dir/Buffer.i
+
+CMakeFiles/base.dir/Buffer.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/base.dir/Buffer.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dal/TinyChat/base/Buffer.cpp -o CMakeFiles/base.dir/Buffer.s
+
 CMakeFiles/base.dir/EventLoop.o: CMakeFiles/base.dir/flags.make
 CMakeFiles/base.dir/EventLoop.o: ../EventLoop.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/base.dir/EventLoop.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/base.dir/EventLoop.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/EventLoop.o -c /home/dal/TinyChat/base/EventLoop.cpp
 
 CMakeFiles/base.dir/EventLoop.i: cmake_force
@@ -91,7 +104,7 @@ CMakeFiles/base.dir/EventLoop.s: cmake_force
 
 CMakeFiles/base.dir/TcpConnection.o: CMakeFiles/base.dir/flags.make
 CMakeFiles/base.dir/TcpConnection.o: ../TcpConnection.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/base.dir/TcpConnection.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/base.dir/TcpConnection.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/TcpConnection.o -c /home/dal/TinyChat/base/TcpConnection.cpp
 
 CMakeFiles/base.dir/TcpConnection.i: cmake_force
@@ -104,7 +117,7 @@ CMakeFiles/base.dir/TcpConnection.s: cmake_force
 
 CMakeFiles/base.dir/TcpServer.o: CMakeFiles/base.dir/flags.make
 CMakeFiles/base.dir/TcpServer.o: ../TcpServer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/base.dir/TcpServer.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/base.dir/TcpServer.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/TcpServer.o -c /home/dal/TinyChat/base/TcpServer.cpp
 
 CMakeFiles/base.dir/TcpServer.i: cmake_force
@@ -117,7 +130,7 @@ CMakeFiles/base.dir/TcpServer.s: cmake_force
 
 CMakeFiles/base.dir/Thread.o: CMakeFiles/base.dir/flags.make
 CMakeFiles/base.dir/Thread.o: ../Thread.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/base.dir/Thread.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/base.dir/Thread.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/Thread.o -c /home/dal/TinyChat/base/Thread.cpp
 
 CMakeFiles/base.dir/Thread.i: cmake_force
@@ -130,7 +143,7 @@ CMakeFiles/base.dir/Thread.s: cmake_force
 
 CMakeFiles/base.dir/ThreadPool.o: CMakeFiles/base.dir/flags.make
 CMakeFiles/base.dir/ThreadPool.o: ../ThreadPool.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/base.dir/ThreadPool.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/base.dir/ThreadPool.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/base.dir/ThreadPool.o -c /home/dal/TinyChat/base/ThreadPool.cpp
 
 CMakeFiles/base.dir/ThreadPool.i: cmake_force
@@ -143,6 +156,7 @@ CMakeFiles/base.dir/ThreadPool.s: cmake_force
 
 # Object files for target base
 base_OBJECTS = \
+"CMakeFiles/base.dir/Buffer.o" \
 "CMakeFiles/base.dir/EventLoop.o" \
 "CMakeFiles/base.dir/TcpConnection.o" \
 "CMakeFiles/base.dir/TcpServer.o" \
@@ -152,6 +166,7 @@ base_OBJECTS = \
 # External object files for target base
 base_EXTERNAL_OBJECTS =
 
+libbase.a: CMakeFiles/base.dir/Buffer.o
 libbase.a: CMakeFiles/base.dir/EventLoop.o
 libbase.a: CMakeFiles/base.dir/TcpConnection.o
 libbase.a: CMakeFiles/base.dir/TcpServer.o
@@ -159,7 +174,7 @@ libbase.a: CMakeFiles/base.dir/Thread.o
 libbase.a: CMakeFiles/base.dir/ThreadPool.o
 libbase.a: CMakeFiles/base.dir/build.make
 libbase.a: CMakeFiles/base.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libbase.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/dal/TinyChat/base/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX static library libbase.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/base.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/base.dir/link.txt --verbose=$(VERBOSE)
 

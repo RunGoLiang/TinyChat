@@ -166,6 +166,28 @@ void EventLoop::addClean(int fd)
     connections_.erase(fd);
 }
 
+/*
+ *
+ */
+void EventLoop::enableEpollOut(int fd)
+{
+    struct epoll_event event;
+    event.events  = EPOLLOUT;
+    event.data.fd = fd;
+    epoll_ctl(epollfd_,EPOLL_CTL_ADD, fd, &event);
+}
+
+/*
+ *
+ */
+void EventLoop::disableEpollOut(int fd)
+{
+    struct epoll_event event;
+    event.events  = EPOLLOUT;
+    event.data.fd = fd;
+    epoll_ctl(epollfd_,EPOLL_CTL_DEL, fd, &event);
+}
+
 /****************************************************************************************************************/
 
 /*

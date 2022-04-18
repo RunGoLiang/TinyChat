@@ -1,2 +1,2 @@
-/usr/bin/ar qc libbase.a CMakeFiles/base.dir/EventLoop.o CMakeFiles/base.dir/TcpConnection.o CMakeFiles/base.dir/TcpServer.o CMakeFiles/base.dir/Thread.o CMakeFiles/base.dir/ThreadPool.o
+/usr/bin/ar qc libbase.a CMakeFiles/base.dir/Buffer.o CMakeFiles/base.dir/EventLoop.o CMakeFiles/base.dir/TcpConnection.o CMakeFiles/base.dir/TcpServer.o CMakeFiles/base.dir/Thread.o CMakeFiles/base.dir/ThreadPool.o
 /usr/bin/ranlib libbase.a

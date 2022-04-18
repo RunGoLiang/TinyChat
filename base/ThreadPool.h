@@ -8,7 +8,7 @@ namespace base
     /*
      *  动态线程池，作为任务线程池使用
      * */
-    class ThreadPool:noncopyable
+    class ThreadPool : noncopyable
     {
     public:
         // 打包线程信息

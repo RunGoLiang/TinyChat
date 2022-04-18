@@ -82,6 +82,12 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/dal/TinyChat/base/Buffer.cpp">
+			<Option target="base"/>
+		</Unit>
+		<Unit filename="/home/dal/TinyChat/base/Buffer.h">
+			<Option target="base"/>
+		</Unit>
 		<Unit filename="/home/dal/TinyChat/base/EventLoop.cpp">
 			<Option target="base"/>
 		</Unit>

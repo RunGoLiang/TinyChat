@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/base.dir/Buffer.o"
   "CMakeFiles/base.dir/EventLoop.o"
   "CMakeFiles/base.dir/TcpConnection.o"
   "CMakeFiles/base.dir/TcpServer.o"

@@ -31,15 +31,20 @@
 
 ////////////////////
 /// 测试用头文件//////
-//#include <iostream>
+#include <iostream>
 ////////////////////
 ////////////////////
 
 namespace base
 {
+    class Buffer;
+    class TcpConnection;
+
     using onConnection     = std::function<void(void*)>;                            // 连接建立、断开回调函数
-    using onMessage        = std::function<void(std::string&&,struct sockaddr_in)>; // 消息到来回调函数
-    using onWriteComplete  = std::function<void(void*)>;                            // 消息发送完毕回调函数
+    using onMessage        = std::function<void(const std::shared_ptr<TcpConnection>,
+                                                Buffer *,
+                                                struct sockaddr_in)>;               // 消息到来回调函数
+    using onWriteComplete  = std::function<void(struct sockaddr_in)>;               // 消息发送完毕回调函数
     using onCleanTcpSever  = std::function<void(std::string)>;                      // Tcp连接关闭时，清理TcpServer::connections_的回调
     using onCleanEventLoop = std::function<void(int)>;                              // Tcp连接关闭时，清理EventLoop::connections_的回调，并取消监听
 
@@ -48,7 +53,6 @@ namespace base
     using Task        = std::function<void()>;       // 任务函数
 
     const int kMicroSecondsPerSecond = 1000 * 1000;
-
 }
 
 #endif //TYPES_H

@@ -15,7 +15,7 @@ namespace base
      * 清理TcpConnection对象是在IO线程中，跨线程调用TcpServer::addClean()，向cleans_添加要清除的连接name，
      * 等下次处理完连接请求后会执行TcpServer::cleanTcpConnection()来清除对象。但并不一定马上析构对象；
      * */
-    class TcpServer:noncopyable
+    class TcpServer : noncopyable
     {
     public:
         /// 不可跨线程调用
@@ -56,7 +56,7 @@ namespace base
         int  epollfd_;  // 监听用的epoll实例
         int  idlefd_;   // 占一个位置，以防fd耗尽
 
-        ThreadPool taskPool_; // 任务处理线程池
+        std::shared_ptr<ThreadPool> taskPool_; // 任务处理线程池
 
         int nextEventLoop_;
         int ioThreadsNum_; // IO线程数量

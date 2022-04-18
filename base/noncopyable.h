@@ -1,9 +1,8 @@
-#ifndef _NONCOPYABLE_H
-#define _NONCOPYABLE_H
+#ifndef NONCOPYABLE_H
+#define NONCOPYABLE_H
 
 namespace base
 {
-
     // noncopyable表示不可拷贝，做法是将copy constructor和assignment函数都设为非public
     class noncopyable
     {
@@ -18,4 +17,4 @@ namespace base
 
 }  // namespace base
 
-#endif  // _NONCOPYABLE_H
+#endif  // NONCOPYABLE_H

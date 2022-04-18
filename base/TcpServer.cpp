@@ -13,7 +13,7 @@ TcpServer::TcpServer(
         onMessage       onMessageFunc,
         onWriteComplete onWriteCompleteFunc)
         :
-        taskPool_(taskPoolSize),    /*任务处理线程池*/
+        taskPool_(new ThreadPool(taskPoolSize)),    /*任务处理线程池*/
         ioThreadsNum_(ioPoolSize),            /*IO线程数量*/
         ip_(INADDR_ANY),                      /*监听地址*/
         port_(port),                          /*监听端口*/
@@ -75,7 +75,7 @@ void TcpServer::start()
         return;
 
     // 启动任务处理线程池
-    taskPool_.startPool();
+    taskPool_->startPool();
 
     // 创建IO线程池
     createEventLoopThreadPool();
@@ -103,7 +103,7 @@ void TcpServer::stop()
         return;
 
     // 停止任务处理线程池
-    taskPool_.stopPool();
+    taskPool_->stopPool();
 
     // 清除epoll对listenfd_的监听
     struct epoll_event event;
@@ -136,9 +136,12 @@ void TcpServer::createNewTcpConnection(int connfd,struct sockaddr_in peeraddr)
     connectionName = "Tcp[" + std::to_string(microSeconds) + "]";
 
     // 用shared_ptr保存新建的TcpConnection对象，并将之存入connections_
+    assert(nextEventLoop_<ioThreadsNum_);
     std::shared_ptr<TcpConnection> newConnection(new TcpConnection(connectionName,
                                                                    connfd,
                                                                    peeraddr,
+                                                                   taskPool_,
+                                                                   eventLoops_[nextEventLoop_],
                                                                    onConnection_,
                                                                    onMessage_,
                                                                    onWriteComplete_,
@@ -146,7 +149,6 @@ void TcpServer::createNewTcpConnection(int connfd,struct sockaddr_in peeraddr)
     connections_[connectionName] = newConnection; // TcpConnection的shared_ptr保存两份：TcpServer、EventLoop各一份
 
     // 将新的TcpConnection对象用round Robin方式分配给各个IO EventLoop
-    assert(nextEventLoop_<ioThreadsNum_);
     eventLoops_[nextEventLoop_]->addConnection(std::move(newConnection));
     nextEventLoop_ = (++nextEventLoop_) >= ioThreadsNum_ ? 0 : nextEventLoop_;
 }

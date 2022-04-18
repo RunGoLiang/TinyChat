@@ -11,7 +11,7 @@ namespace base
      *  线程对象类
      *  调用Thread::startThread()后会执行构造时给定的threadFunc_函数
      * */
-    class Thread:noncopyable
+    class Thread : noncopyable
     {
     public:
         // 线程状态

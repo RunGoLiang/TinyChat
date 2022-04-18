@@ -143,6 +143,21 @@ base/fast:
 .PHONY : base/fast
 
 # target to build an object file
+Buffer.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/base.dir/build.make CMakeFiles/base.dir/Buffer.o
+.PHONY : Buffer.o
+
+# target to preprocess a source file
+Buffer.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/base.dir/build.make CMakeFiles/base.dir/Buffer.i
+.PHONY : Buffer.i
+
+# target to generate assembly for a file
+Buffer.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/base.dir/build.make CMakeFiles/base.dir/Buffer.s
+.PHONY : Buffer.s
+
+# target to build an object file
 EventLoop.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/base.dir/build.make CMakeFiles/base.dir/EventLoop.o
 .PHONY : EventLoop.o
@@ -226,6 +241,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... base"
+	@echo "... Buffer.o"
+	@echo "... Buffer.i"
+	@echo "... Buffer.s"
 	@echo "... EventLoop.o"
 	@echo "... EventLoop.i"
 	@echo "... EventLoop.s"
