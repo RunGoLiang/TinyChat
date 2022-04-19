@@ -34,8 +34,6 @@ void onMessageFunc(const std::shared_ptr<TcpConnection> conn,
     conn->addTaskToPool(std::bind(taskFunction,conn,std::move(message))); // 向任务池投入一个任务，由任务线程执行
 }
 
-
-
 void onWriteCompleteFunc(struct sockaddr_in peeraddr)
 {
     std::cout << "给" << "[" << inet_ntoa(peeraddr.sin_addr) << ":" << ntohs(peeraddr.sin_port) << "]" \

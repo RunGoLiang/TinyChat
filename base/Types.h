@@ -22,6 +22,7 @@
 
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 
 #include <signal.h>
@@ -31,7 +32,7 @@
 
 ////////////////////
 /// 测试用头文件//////
-#include <iostream>
+//#include <iostream>
 ////////////////////
 ////////////////////
 

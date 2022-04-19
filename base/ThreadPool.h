@@ -25,6 +25,7 @@ namespace base
         bool startPool();
         bool stopPool();
         bool addTask(Task oneTask);
+
         void wakeupAllThread();
 
         /// 不可跨线程调用

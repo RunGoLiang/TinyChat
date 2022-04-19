@@ -18,6 +18,7 @@ TcpConnection::TcpConnection(
         onCleanTcpSever onCleanTcpSeverFunc)
         :
         name_(connectionName),
+        connected_(true),
         socketfd_(connfd),
         peeraddr_(peeraddr),
         taskPool_(taskPool),
@@ -34,7 +35,7 @@ TcpConnection::TcpConnection(
  */
 TcpConnection::~TcpConnection()
 {
-    close(socketfd_);
+    handleClose();
 }
 
 /*
@@ -79,6 +80,7 @@ void TcpConnection::handleWrite()
         {
             outputBuffer_.retrieveAll();
             eventLoop_->disableEpollOut(socketfd_);
+            onWriteComplete_(peeraddr_);
         }
         // 出错了
         else // remain < 0
@@ -90,6 +92,7 @@ void TcpConnection::handleWrite()
 
 /*
  *  关闭当前连接
+ *  可用于主动断开连接
  *  干3件事：
  *  1.调用用户设定的onConnection()
  *  2.清理TcpServer
@@ -97,21 +100,35 @@ void TcpConnection::handleWrite()
  */
 void TcpConnection::handleClose()
 {
-    onConnection_((void *)&peeraddr_); // 用户设定的连接建立、断开的回调
+    if(!connected_)
+        return;
+
+    // 标记已经断开，禁止再向对等方发送数据
+    connected_ = false;
+
+    // 用户设定的连接建立、断开的回调
+    onConnection_((void *)&peeraddr_);
 
     // 清理TcpServer，调用TcpServer::addClean()
     onCleanTcpServer_(name_);
 
+    // 取消监听可写事件
+    eventLoop_->disableEpollOut(socketfd_);
+
     // 清理EventLoop，取消监听，调用EventLoop::addClean()
     onCleanEventLoop_(socketfd_);
+
+    // 关闭socket
+    close(socketfd_);
 }
 
 /*
  *  epoll时出现问题回调
+ *  关闭连接
  */
 void TcpConnection::handleError()
 {
-
+    handleClose();
 }
 
 /*
@@ -120,7 +137,12 @@ void TcpConnection::handleError()
  */
 void TcpConnection::send(std::string message)
 {
-    eventLoop_->addPending(std::bind(&TcpConnection::sendInLoop,this,std::move(message)));
+    // 如果已经断开连接，就不再向对等方发送数据
+    if(!connected_)
+        return;
+
+    // shared_from_this()是为了防止一旦待办被执行前TcpConnection对象就被销毁，this就成了野指针，将会出现段错误
+    eventLoop_->addPending(std::bind(&TcpConnection::sendInLoop,shared_from_this(),std::move(message)));
     eventLoop_->wakeup();
 }
 
@@ -130,6 +152,10 @@ void TcpConnection::send(std::string message)
  */
 void TcpConnection::sendInLoop(std::string message)
 {
+    // 如果是待办未执行前连接已经关闭，就不再发送数据给对等方
+    if(!connected_)
+        return;
+
     size_t total = message.size();
 
     // 如果output中有数据，就不发送，把message附加在后面
@@ -148,7 +174,7 @@ void TcpConnection::sendInLoop(std::string message)
         // 这次发送完了，回调onWriteComplete_
         if(remain == 0)
         {
-            eventLoop_->addPending(std::bind(onWriteComplete_,peeraddr_));
+            onWriteComplete_(peeraddr_);
         }
         // 这次没发完
         else if(remain > 0)

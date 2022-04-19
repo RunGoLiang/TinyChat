@@ -55,6 +55,10 @@ void EventLoop::loop()
     {
         int numEvent = epoll_wait(epollfd_,&(*events_.begin()), events_.size(),-1);
 
+        // 如果是stopLoop()唤醒的，就马上退出
+        if(!running_)
+            break;
+
         // 异常情况处理
         if(numEvent == -1 && errno == EINTR)
             continue;
@@ -191,7 +195,7 @@ void EventLoop::disableEpollOut(int fd)
 /****************************************************************************************************************/
 
 /*
- *  通知loop停止
+ *  停止loop
  *  可重复调用
  */
 void EventLoop::stopLoop()
@@ -200,6 +204,8 @@ void EventLoop::stopLoop()
         return;
 
     running_ = false;
+
+    wakeup();
 }
 
 /*

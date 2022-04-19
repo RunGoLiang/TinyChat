@@ -19,6 +19,8 @@ namespace base
      *  然后调用EventLoop::addClean()，告知eventloop从其connections_中清理掉一份引用，并取消监听（引用剩余1）；
      *  最后回到loop()中，curConnection_改变指向，保存的引用消失（引用剩余0）。
      *  由于“server清理”和“curConnection_改变指向”位于不同线程，因此是两者中后发生者析构了TcpConnection对象。
+     *
+     *  还有可能任务列表中还有task函数bind了TcpConnection的shared_ptr，这会导致无法马上销毁TcpConnection对象
      * */
     class TcpConnection : noncopyable,
                             public std::enable_shared_from_this<TcpConnection>
@@ -55,13 +57,15 @@ namespace base
         void send(std::string message);
 
     private:
+        bool connected_;
+
         pid_t threadId_; // 所属IO线程的线程ID
 
         std::string        name_;     // 每个TcpConnection对象的唯一标识符，格式为：Tcp[xxxxxx……]（[]中为64位的时间字符串，以us为单位）
         int                socketfd_; // 连接对应的socket文件描述符
         struct sockaddr_in peeraddr_;
 
-        Buffer inputBuffer_,outputBuffer_;       // 应用层缓冲区，内部数据以网络字节序存放
+        Buffer inputBuffer_,outputBuffer_;      // 应用层缓冲区，内部数据以网络字节序存放
         std::shared_ptr<ThreadPool> taskPool_;  // TcpServer拥有的任务处理线程池
         std::shared_ptr<EventLoop>  eventLoop_; // 所属的EventLoop对象
 

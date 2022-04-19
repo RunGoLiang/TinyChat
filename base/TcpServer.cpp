@@ -92,7 +92,6 @@ void TcpServer::start()
     acceptNewConnection();
 }
 
-/// FIXME:关闭所有TcpConnection，缺少主动断开连接的操作
 /*
  *  停止TcpServer
  *  可重复调用
@@ -102,19 +101,25 @@ void TcpServer::stop()
     if(!running_)
         return;
 
-    // 停止任务处理线程池
-    taskPool_->stopPool();
-
     // 清除epoll对listenfd_的监听
     struct epoll_event event;
     event.events  = EPOLLIN;
     event.data.fd = listenfd_;
     epoll_ctl(epollfd_, EPOLL_CTL_DEL, listenfd_, &event);
 
+    // 停止任务处理线程池
+    taskPool_->stopPool();
+
+    // 关闭所有TcpConnection
+    for(auto conn:connections_)
+        conn.second->handleClose();
+
     // 关闭IO线程池
     stopEventLoopThreadPool();
 
-    // 关闭所有TcpConnection
+    // 清空IO线程对象
+    for(int i=0;i < ioThreadsNum_;++i)
+        ioThreads_.pop_back();
 
     running_ = false;
 }
@@ -146,7 +151,14 @@ void TcpServer::createNewTcpConnection(int connfd,struct sockaddr_in peeraddr)
                                                                    onMessage_,
                                                                    onWriteComplete_,
                                                                    std::bind(&TcpServer::addClean,this,std::placeholders::_1)));
-    connections_[connectionName] = newConnection; // TcpConnection的shared_ptr保存两份：TcpServer、EventLoop各一份
+
+    // 关闭negal算法
+    int optval = 1;
+    setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY,
+                 &optval, static_cast<socklen_t>(sizeof optval));
+
+    // TcpConnection的shared_ptr保存两份：TcpServer、EventLoop各一份
+    connections_[connectionName] = newConnection;
 
     // 将新的TcpConnection对象用round Robin方式分配给各个IO EventLoop
     eventLoops_[nextEventLoop_]->addConnection(std::move(newConnection));
@@ -213,8 +225,7 @@ void TcpServer::stopEventLoopThreadPool()
 {
     for(int i=0;i < ioThreadsNum_;++i)
     {
-        eventLoops_[i]->stopLoop();  // 只要退出loop()就能结束IO线程
-        eventLoops_[i]->wakeup();    // 唤醒IO线程
+        eventLoops_[i]->stopLoop();  // 马上退出loop()，只要退出loop()就能结束IO线程
         ioThreads_[i]->stopThread(); // detach IO线程，不等待回收资源
     }
 

@@ -13,8 +13,8 @@ namespace base
      *  线程函数中创建对象时用shared_ptr保存一份引用，然后马上往TcpServer的eventLoops_也保存一份引用。
      *  构造TcpConnection时，由TcpServer传递一个shared_ptr给TcpConnection对象。
      *
-     *  要停止IO线程时，断开所有Tcp连接，保存的n份引用都销毁，
-     *  然后在TcpServer::stopEventLoopThreadPool()中将TcpServer的eventLoops_中的引用清除（引用剩余1），并通知IO线程停止；
+     *  要停止IO线程前，先断开所有Tcp连接，保存的n份引用都销毁，
+     *  然后在TcpServer::stopEventLoopThreadPool()中将TcpServer的eventLoops_中的引用清除（引用剩余1），并命令IO线程停止；
      *  IO线程结束时，先退出loop()，然后就退出线程函数，此时线程函数中的引用销毁（引用剩余0），此时析构EventLoop对象。
      * */
     class EventLoop : noncopyable

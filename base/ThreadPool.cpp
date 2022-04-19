@@ -68,6 +68,11 @@ bool ThreadPool::stopPool()
     while(running_); // 等待线程结束
     stopping_ = false; // 便于下一次再启动pool
 
+    // 清空task列表，否则有些TcpConnection对象没法销毁，还会有shared_ptr被bind在task函数上
+    // 此时所有任务线程都结束了，由于running_为false，IO线程那边不可能再投入新的task了，因此不需要加锁
+    while(!taskList_.empty())
+        taskList_.pop();
+
     return true;
 }
 

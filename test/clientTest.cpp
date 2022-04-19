@@ -19,17 +19,17 @@ int main()
 
     std::cout << "连接请求已发送" <<std::endl;
 
-    sleep(2);
+    sleep(3);
 
     char buf[] = "hello!";
     write(connfd,buf,sizeof(buf));
     std::cout << "消息已发送" <<std::endl;
 
-    sleep(2);
-
     char recv[1024];
     read(connfd,recv,1024);
     std::cout << "收到消息：" << recv <<std::endl;
+
+    sleep(3);
 
     close(connfd);
     std::cout << "连接已关闭" <<std::endl;
